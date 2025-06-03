@@ -26,7 +26,6 @@ mongoose.connect('mongodb+srv://businesskeyutech:86vT98mp3O1oJmM0@cluster0.ramsk
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// 🏠 Basic health check route
 app.get("/", (req, res) => {
   res.send("💬 Chat backend is running...");
 });
