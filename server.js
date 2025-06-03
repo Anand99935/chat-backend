@@ -12,7 +12,7 @@ const server = http.createServer(app);
 // 🔌 Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // Frontend URL
+    origin: "http://localhost:3000", 
     methods: ["GET", "POST"]
   }
 });
@@ -26,8 +26,11 @@ mongoose.connect('mongodb+srv://businesskeyutech:86vT98mp3O1oJmM0@cluster0.ramsk
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-app.get("/", (req, res) => {
-  res.send("💬 Chat backend is running...");
+// app.get("/", (req, res) => {
+//   res.send("💬 Chat backend is running...");
+// });
+app.get("/test", (req, res) => {
+  res.send("Test route works!");
 });
 
 // 🔐 User Login/Signup
