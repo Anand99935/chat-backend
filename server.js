@@ -21,37 +21,40 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
+client.connect().then(() => {
+  const db = client.db('chatapp');
+  usersCollection = db.collection('users');
+});
+
 // 🌐 MongoDB connection
 mongoose.connect('mongodb+srv://businesskeyutech:86vT98mp3O1oJmM0@cluster0.ramskda.mongodb.net/chatapp?retryWrites=true&w=majority')
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// app.get("/", (req, res) => {
-//   res.send("💬 Chat backend is running...");
-// });
-app.get("/test", (req, res) => {
-  res.send("Test route works!");
+app.get("/", (req, res) => {
+  res.send("💬 Chat backend is running...");
 });
 
-// 🔐 User Login/Signup
-app.post("/login", async (req, res) => {
+// 🔑 LOGIN / REGISTER Endpoint
+app.post('/api/login', async (req, res) => {
   const { name, email } = req.body;
 
-  if (!name || !email) {
-    return res.status(400).json({ success: false, message: "Missing name or email" });
-  }
-
   try {
-    let user = await User.findOne({ email });
+    // Check if user already exists
+    const existingUser = await usersCollection.findOne({ name, email });
 
-    if (!user) {
-      user = await User.create({ name, email });
+    if (existingUser) {
+      // ✅ Already exists → Login
+      return res.status(200).json({ message: 'Login successful', user: existingUser });
+    } else {
+      // ❇️ New user → Insert
+      const result = await usersCollection.insertOne({ name, email });
+      return res.status(201).json({ message: 'User registered', user: result.ops[0] });
     }
 
-    res.json({ success: true, user });
   } catch (err) {
     console.error("❌ Login DB error:", err);
-    res.status(500).json({ success: false, message: "Database error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
