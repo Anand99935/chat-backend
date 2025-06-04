@@ -13,6 +13,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "https://chat-backend-2-ukox.onrender.com", 
+    credentials: true,
     methods: ["GET", "POST"]
   }
 });
