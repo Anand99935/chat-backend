@@ -10,32 +10,38 @@ const User = require('./models/user');
 const app = express();
 const server = http.createServer(app);
 
-// 🔌 Socket.IO setup
+// ✅ Correct CORS origins
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://anand99935.github.io"
+];
+
+// ✅ Express middleware
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+app.use(express.json());
+
+// ✅ Socket.IO setup with CORS
 const io = new Server(server, {
   cors: {
-    origin: "https://anand99935.github.io", 
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST"]
   }
 });
 
-// 🧩 Middleware
-app.use(cors({
-  origin: "https://anand99935.github.io",
-  credentials: true
-}));
-app.use(express.json());
-
-// 🌐 MongoDB connection
+// ✅ MongoDB connection
 mongoose.connect('mongodb+srv://businesskeyutech:86vT98mp3O1oJmM0@cluster0.ramskda.mongodb.net/chatapp?retryWrites=true&w=majority')
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
+// ✅ Routes
 app.get("/", (req, res) => {
   res.send("💬 Chat backend is running...");
 });
 
-// 🔑 LOGIN / REGISTER Endpoint
 app.post('/api/login', async (req, res) => {
   const { name, email } = req.body;
 
@@ -43,11 +49,11 @@ app.post('/api/login', async (req, res) => {
     const existingUser = await User.findOne({ name, email });
 
     if (existingUser) {
-      return res.status(200).json({ message: 'Login successful', user: existingUser });
+      return res.status(200).json({ success: true, user: existingUser });
     } else {
       const newUser = new User({ name, email });
       const savedUser = await newUser.save();
-      return res.status(201).json({ message: 'User registered', user: savedUser }); //
+      return res.status(201).json({ success: true, user: savedUser });
     }
 
   } catch (err) {
@@ -56,7 +62,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// 💬 Get all chat messages
 app.get("/messages", async (req, res) => {
   try {
     const messages = await Message.find().sort({ timestamp: 1 });
@@ -67,7 +72,6 @@ app.get("/messages", async (req, res) => {
   }
 });
 
-// 👥 Get distinct chat users
 app.get("/users", async (req, res) => {
   try {
     const users = await Message.distinct("sender");
@@ -78,7 +82,7 @@ app.get("/users", async (req, res) => {
   }
 });
 
-// 📡 Socket.IO communication
+// ✅ Socket.IO Chat
 io.on("connection", (socket) => {
   console.log("⚡ User connected:", socket.id);
 
