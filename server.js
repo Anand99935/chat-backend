@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
+
 const Message = require('./models/message');
 const User = require('./models/user');
 
@@ -12,20 +13,18 @@ const server = http.createServer(app);
 // 🔌 Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "https://chat-backend-2-ukox.onrender.com", 
+    origin: "https://anand99935.github.io", 
     credentials: true,
     methods: ["GET", "POST"]
   }
 });
 
 // 🧩 Middleware
-app.use(cors());
+app.use(cors({
+  origin: "https://anand99935.github.io",
+  credentials: true
+}));
 app.use(express.json());
-
-// client.connect().then(() => {
-//   const db = client.db('chatapp');
-//   usersCollection = db.collection('users');
-// });
 
 // 🌐 MongoDB connection
 mongoose.connect('mongodb+srv://businesskeyutech:86vT98mp3O1oJmM0@cluster0.ramskda.mongodb.net/chatapp?retryWrites=true&w=majority')
@@ -41,16 +40,14 @@ app.post('/api/login', async (req, res) => {
   const { name, email } = req.body;
 
   try {
-    // Check if user already exists
-    const existingUser = await usersCollection.findOne({ name, email });
+    const existingUser = await User.findOne({ name, email });
 
     if (existingUser) {
-      // ✅ Already exists → Login
       return res.status(200).json({ message: 'Login successful', user: existingUser });
     } else {
-      // ❇️ New user → Insert
-      const result = await usersCollection.insertOne({ name, email });
-      return res.status(201).json({ message: 'User registered', user: result.ops[0] });
+      const newUser = new User({ name, email });
+      const savedUser = await newUser.save();
+      return res.status(201).json({ message: 'User registered', user: savedUser }); //
     }
 
   } catch (err) {
