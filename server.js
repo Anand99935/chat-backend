@@ -12,7 +12,7 @@ const server = http.createServer(app);
 // 🔌 Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", 
+    origin: "https://chat-backend-2-ukox.onrender.com", 
     methods: ["GET", "POST"]
   }
 });
@@ -21,10 +21,10 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
-client.connect().then(() => {
-  const db = client.db('chatapp');
-  usersCollection = db.collection('users');
-});
+// client.connect().then(() => {
+//   const db = client.db('chatapp');
+//   usersCollection = db.collection('users');
+// });
 
 // 🌐 MongoDB connection
 mongoose.connect('mongodb+srv://businesskeyutech:86vT98mp3O1oJmM0@cluster0.ramskda.mongodb.net/chatapp?retryWrites=true&w=majority')
