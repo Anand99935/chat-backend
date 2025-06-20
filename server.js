@@ -26,41 +26,35 @@ app.post('/api/login', async (req, res) => {
   const { name, email, isAdmin } = req.body;
 
   if (isAdmin) {
+    // Admin login
     if (name === ADMIN_CREDENTIALS.name && email === ADMIN_CREDENTIALS.email) {
       return res.json({
         success: true,
-        user: name,
-        email,
+        user: { name, email },
         isAdmin: true
       });
     } else {
       return res.status(401).json({ error: 'Invalid admin credentials' });
     }
   }
-  console.log('failed user login attempt:', { name, email });
-  return res.json({
-    success: true,
-    user: name,
-    email,
-    isAdmin: false
-  });
-});
-try {
-   const existingUser = await User.findOne({name: ADMIN_CREDENTIALS.name , email:ADMIN_CREDENTIALS.email});
-   if(existingUser) {
-    return response.json({ success:true , user:existingUser });
-  }
-   else{
-    const newUser = new User({name , email });
-    const savedUser = await newUser.save();
-    return response.json({success:true , user:savedUser})
-   }
-  }
 
-catch (err) {
- console.error('login error', err);
-  res.status(500).json({error:'Internal server error'});
-}
+  // Normal user login
+  try {
+    const existingUser = await User.findOne({ name, email });
+
+    if (existingUser) {
+      return res.status(200).json({ success: true, user: existingUser });
+    }
+
+    const newUser = new User({ name, email });
+    const savedUser = await newUser.save();
+    return res.status(201).json({ success: true, user: savedUser });
+
+  } catch (err) {
+    console.error("❌ Login DB error:", err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // ✅ Express middleware
 app.use(cors({
@@ -88,25 +82,6 @@ app.get("/", (req, res) => {
   res.send("💬 Chat backend is running...");
 });
 
-app.post('/api/login', async (req, res) => {
-  const { name, email } = req.body;
-
-  try {
-    const existingUser = await User.findOne({ name, email });
-
-    if (existingUser) {
-      return res.status(200).json({ success: true, user: existingUser });
-    } else {
-      const newUser = new User({ name, email });
-      const savedUser = await newUser.save();
-      return res.status(201).json({ success: true, user: savedUser });
-    }
-
-  } catch (err) {
-    console.error("❌ Login DB error:", err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 app.get("/messages", async (req, res) => {
   try {
