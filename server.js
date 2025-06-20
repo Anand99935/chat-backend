@@ -127,18 +127,20 @@ io.on("connection", (socket) => {
   console.log("⚡ User connected:", socket.id);
 
   socket.on("send-message", async (data) => {
-    const { sender, text } = data;
-    if (!sender || !text) return;
+  const { sender, receiver, text } = data;
 
-    const newMessage = new Message({ sender, text });
+  if (!sender || !receiver || !text) return;
 
-    try {
-      const saved = await newMessage.save();
-      io.emit("receive-message", saved);
-    } catch (err) {
-      console.error("❌ Save message error:", err);
-    }
-  });
+  const newMessage = new Message({ sender, receiver, text });
+
+  try {
+    const saved = await newMessage.save();
+    io.emit("receive-message", saved);
+  } catch (err) {
+    console.error("❌ Save message error:", err);
+  }
+});
+
 
   socket.on("disconnect", () => {
     console.log("🚪 User disconnected:", socket.id);
