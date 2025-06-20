@@ -97,6 +97,23 @@ app.get("/api/messages/:userEmail", async (req, res) => {
   }
 });
 
+// admin user conversation
+app.get("/api/conversation/:userEmail", async (req, res) => {
+  try {
+    const { userEmail } = req.params;
+    const adminEmail = ADMIN_CREDENTIALS.email;
+    const messages = await Message.find({
+      $or: [
+        { sender: userEmail },
+        { sender: adminEmail }
+      ]
+    }).sort({ timestamp: 1 });
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch conversation" });
+  }
+});
+
 // ✅ Socket.IO
 const io = new Server(server, {
   cors: {
