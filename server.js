@@ -10,23 +10,28 @@ const User = require('./models/user');
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Correct CORS origins
+// ✅ Middleware must come BEFORE routes
 const allowedOrigins = [
   "http://localhost:3000",
   "https://anand99935.github.io"
 ];
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+app.use(express.json());
 
-// admin login concept from 19-
+// ✅ Admin login check
 const ADMIN_CREDENTIALS = {
   name: 'Admin',
   email: 'admin@chat.com'
 };
 
+// ✅ Login route (admin + user)
 app.post('/api/login', async (req, res) => {
   const { name, email, isAdmin } = req.body;
 
   if (isAdmin) {
-    // Admin login
     if (name === ADMIN_CREDENTIALS.name && email === ADMIN_CREDENTIALS.email) {
       return res.json({
         success: true,
@@ -38,10 +43,8 @@ app.post('/api/login', async (req, res) => {
     }
   }
 
-  // Normal user login
   try {
     const existingUser = await User.findOne({ name, email });
-
     if (existingUser) {
       return res.status(200).json({ success: true, user: existingUser });
     }
@@ -56,51 +59,34 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// ✅ Express middleware
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
-app.use(express.json());
-
-// ✅ Socket.IO setup with CORS
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "POST"]
-  }
-});
-
-// ✅ MongoDB connection
+// ✅ MongoDB
 mongoose.connect('mongodb+srv://businesskeyutech:86vT98mp3O1oJmM0@cluster0.ramskda.mongodb.net/chatapp?retryWrites=true&w=majority')
   .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+  .catch(err => console.error('❌ MongoDB error:', err));
 
-// ✅ Routes
+// ✅ REST routes
 app.get("/", (req, res) => {
   res.send("💬 Chat backend is running...");
 });
-
 
 app.get("/messages", async (req, res) => {
   try {
     const messages = await Message.find().sort({ timestamp: 1 });
     res.json(messages);
   } catch (err) {
-    console.error("❌ Error fetching messages:", err);
     res.status(500).json({ error: "Failed to fetch messages" });
   }
 });
 
 app.get("/api/users", async (req, res) => {
   try {
-    const users = await User.find({}, "name email"); // name & email only
+    const users = await User.find({}, "name email");
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch users" });
   }
 });
+
 app.get("/api/messages/:userEmail", async (req, res) => {
   try {
     const { userEmail } = req.params;
@@ -111,22 +97,29 @@ app.get("/api/messages/:userEmail", async (req, res) => {
   }
 });
 
-// ✅ Socket.IO Chat
+// ✅ Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST"]
+  }
+});
+
 io.on("connection", (socket) => {
   console.log("⚡ User connected:", socket.id);
 
   socket.on("send-message", async (data) => {
     const { sender, text } = data;
-
     if (!sender || !text) return;
 
     const newMessage = new Message({ sender, text });
 
     try {
-      const savedMessage = await newMessage.save();
-      io.emit("receive-message", savedMessage);
+      const saved = await newMessage.save();
+      io.emit("receive-message", saved);
     } catch (err) {
-      console.error("❌ Error saving message:", err);
+      console.error("❌ Save message error:", err);
     }
   });
 
@@ -135,6 +128,7 @@ io.on("connection", (socket) => {
   });
 });
 
+// ✅ Server start
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
