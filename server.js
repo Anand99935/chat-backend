@@ -142,7 +142,6 @@ if (!sender || !receiver || !text) return;
     console.log("🚪 User disconnected:", socket.id);
   });
 });
-
 // ✅ Server start
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
