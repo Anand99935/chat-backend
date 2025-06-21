@@ -104,16 +104,15 @@ app.get("/api/conversation/:userEmail", async (req, res) => {
     const adminEmail = ADMIN_CREDENTIALS.email;
     const messages = await Message.find({
       $or: [
-        { sender: userEmail },
-        { sender: adminEmail }
-      ]
+        { sender: userEmail, receiver: adminEmail },
+        { sender: adminEmail, receiver: userEmail }
+      ] 
     }).sort({ timestamp: 1 });
     res.json(messages);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch conversation" });
   }
 });
-
 // ✅ Socket.IO
 const io = new Server(server, {
   cors: {
@@ -127,20 +126,17 @@ io.on("connection", (socket) => {
   console.log("⚡ User connected:", socket.id);
 
   socket.on("send-message", async (data) => {
-  const { sender, receiver, text } = data;
+    const { sender,receiver , text } = data;
+if (!sender || !receiver || !text) return;
+    const newMessage = new Message({ sender,receiver, text });
 
-  if (!sender || !receiver || !text) return;
-
-  const newMessage = new Message({ sender, receiver, text });
-
-  try {
-    const saved = await newMessage.save();
-    io.emit("receive-message", saved);
-  } catch (err) {
-    console.error("❌ Save message error:", err);
-  }
-});
-
+    try {
+      const saved = await newMessage.save();
+      io.emit("receive-message", saved);
+    } catch (err) {
+      console.error("❌ Save message error:", err);
+    }
+  });
 
   socket.on("disconnect", () => {
     console.log("🚪 User disconnected:", socket.id);
