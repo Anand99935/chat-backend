@@ -4,6 +4,10 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
+
 const Message = require('./models/message');
 const User = require('./models/user');
 
@@ -15,17 +19,40 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://anand99935.github.io"
 ];
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
-app.use(express.json());
 
 // ✅ Admin login check
 const ADMIN_CREDENTIALS = {
   name: 'Admin',
   email: 'admin@chat.com'
 };
+
+//sending img/video by cloudinary
+cloudinary.config({
+  cloud_name: 'dtmfrtwy4',
+  api_key: '629516584655468',
+  api_secret: '8k-EvIFA-ZcNDI-Po1M-8J6oQKw'
+});
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'chat_uploads',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'mp4', 'mov'],
+  },
+});
+
+const upload = multer({ storage });
+
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  res.json({ url: req.file.path }); // Cloudinary file URL
+});
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+app.use(express.json());
+
 
 // ✅ Login route (admin + user)
 app.post('/api/login', async (req, res) => {
