@@ -30,7 +30,7 @@ const ADMIN_CREDENTIALS = {
 // ✅ Login route (admin + user)
 app.post('/api/login', async (req, res) => {
   const { name, email, isAdmin } = req.body;
-
+  
   if (isAdmin) {
     if (name === ADMIN_CREDENTIALS.name && email === ADMIN_CREDENTIALS.email) {
       return res.json({
