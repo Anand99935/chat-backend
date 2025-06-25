@@ -26,6 +26,7 @@ const ADMIN_CREDENTIALS = {
   name: 'Admin',
   email: 'admin@chat.com'
 };
+app.options('*', cors());
 
 //sending img/video by cloudinary
 cloudinary.config({
